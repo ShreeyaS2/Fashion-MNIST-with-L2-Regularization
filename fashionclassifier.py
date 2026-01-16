@@ -15,9 +15,9 @@ X_train=train_data[1:n]/255.0 # splitting till n for train data and normalizing 
 
 #initializing parameters
 def initialize_params():
-    W1=np.random.rand(10,784) -0.5
-    b1=np.zeros((10,1))
-    W2=np.random.rand(10,10) -0.5
+    W1=np.random.rand(128,784) -0.5
+    b1=np.zeros((128,1))
+    W2=np.random.rand(10,128) -0.5
     b2=np.zeros((10,1))
     return W1,b1,W2,b2
 
@@ -108,3 +108,4 @@ def test_prediction(index, W1, b1, W2, b2):
 test_prediction(0, W1_nr, b1_nr, W2_nr, b2_nr)
 # Test predictions with L2 regularization
 test_prediction(0, W1_l2, b1_l2, W2_l2, b2_l2)
+
