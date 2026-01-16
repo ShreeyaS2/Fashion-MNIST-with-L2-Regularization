@@ -40,14 +40,14 @@ def relu_derivative(Z):
     return Z > 0
 
 # steptwo: backward propagation
-def backward_prop(A1,A2,W2,X,Y,Z1):
+def backward_prop(A1,A2,W1,W2,X,Y,Z1,l2_lambda):
     m=Y.size
     one_hot_Y=one_hot(Y)
     dZ2=A2-one_hot_Y
-    dW2=1/m*np.dot(dZ2,A1.T)
+    dW2=1/m*np.dot(dZ2,A1.T) + (l2_lambda/m)*W2
     db2=1/m*np.sum(dZ2,axis=1,keepdims=True)
     dZ1=np.dot(W2.T,dZ2)*relu_derivative(Z1)
-    dW1=1/m*np.dot(dZ1,X.T)
+    dW1=1/m*np.dot(dZ1,X.T) + (l2_lambda/m)*W1
     db1=1/m*np.sum(dZ1,axis=1,keepdims=True)
     return dW1,db1,dW2,db2
 
@@ -65,11 +65,11 @@ def get_accuracy(predictions, Y):
     print(predictions, Y)
     return np.sum(predictions == Y) / Y.size
 
-def gradient_descent(X, Y, alpha, iterations):
+def gradient_descent(X, Y, alpha, iterations,l2_lambda):
     W1, b1, W2, b2 = initialize_params()
     for i in range(iterations):
         Z1, A1, Z2, A2 = forward_prop(W1, b1, W2, b2, X)
-        dW1, db1, dW2, db2 = backward_prop(A1, A2, W2, X, Y, Z1)
+        dW1, db1, dW2, db2 = backward_prop(A1, A2, W1, W2, X, Y, Z1, l2_lambda)
         W1, b1, W2, b2 = update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha)
         if i % 100 == 0:
             print("Iteration: ", i)
@@ -77,7 +77,15 @@ def gradient_descent(X, Y, alpha, iterations):
             print(get_accuracy(predictions, Y))
     return W1, b1, W2, b2
 
-W1, b1, W2, b2 = gradient_descent(X_train, Y_train, 0.05, 1000)
+# No regularization
+W1_nr, b1_nr, W2_nr, b2_nr = gradient_descent(
+    X_train, Y_train, alpha=0.05, iterations=1000, l2_lambda=0.0
+)
+
+# With L2 regularization
+W1_l2, b1_l2, W2_l2, b2_l2 = gradient_descent(
+    X_train, Y_train, alpha=0.05, iterations=1000, l2_lambda=0.1
+)
 
 def make_predictions(X, W1, b1, W2, b2):
     _, _, _, A2 = forward_prop(W1, b1, W2, b2, X)
@@ -85,9 +93,9 @@ def make_predictions(X, W1, b1, W2, b2):
     return predictions
 
 def test_prediction(index, W1, b1, W2, b2):
-    current_image = X_train[:, index, None]
-    prediction = make_predictions(X_train[:, index, None], W1, b1, W2, b2)
-    label = Y_train[index]
+    current_image = X_dev[:, index, None]
+    prediction = make_predictions(X_dev[:, index, None], W1, b1, W2, b2)
+    label = Y_dev[index]
     print("Prediction: ", prediction)
     print("Label: ", label)
     
@@ -96,4 +104,7 @@ def test_prediction(index, W1, b1, W2, b2):
     plt.imshow(current_image, interpolation='nearest')
     plt.show()
     
-test_prediction(10, W1, b1, W2, b2) 
+# Test predictions without regularization
+test_prediction(0, W1_nr, b1_nr, W2_nr, b2_nr)
+# Test predictions with L2 regularization
+test_prediction(0, W1_l2, b1_l2, W2_l2, b2_l2)
